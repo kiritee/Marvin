@@ -1,18 +1,50 @@
 from config import *
+import os
+import pathlib
+from datetime import datetime
+import time
 import openai
 import tiktoken
-import os
+import speech_recognition as sr
+
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-  # Helper function to remove item from a list
+# function to get speech input
+def speech_input():
+    # obtain audio from the microphone
+    r = sr.Recognizer()
+    r.energy_threshold = 4000
+    with sr.Microphone() as source:
+        print("speak now")
+        audio = r.listen(source, timeout=None, phrase_time_limit=None)
+
+    pathlib.Path(audio_prompts_folder).mkdir(parents=True, exist_ok=True) 
+    now = datetime.now()
+    audio_filename = audio_prompts_folder + "/ap_"+ now.strftime("%Y_%m_%d_%H%M") + ".wav"
+
+    with open(audio_filename, 'wb') as audio_file:
+        audio_file.write(audio.get_wav_data())
+
+    with open(audio_filename,'rb') as audio_file:
+        transcript = openai.Audio.transcribe("whisper-1", audio_file, language='en')["text"]
+    print("You: " + transcript)
+    return transcript
+
+
+  # function to remove item from a list
 def remove_items(test_list, item):
     res = [i for i in test_list if i != item]
     return res
 
 # Chat Response Function
 def chat_response(question_message):
-    response = openai.ChatCompletion.create(model=model_engine,messages=question_message, frequency_penalty=2-repeat_factor/25, temperature=randomness/50)
+    try:
+        response = openai.ChatCompletion.create(model=model_engine,messages=question_message)
+        #, frequency_penalty=2-repeat_factor/25, temperature=randomness/50)
+    except openai.error.RateLimitError:
+        time.sleep(60)
+        response = openai.ChatCompletion.create(model=model_engine,messages=question_message, frequency_penalty=2-repeat_factor/25, temperature=randomness/50)
     answer_message = response.choices[0]['message']
     return answer_message
 
@@ -22,6 +54,7 @@ def trimmed(messages, token_buffer = token_buffer, max_token = max_token, model_
         messages=messages[-1:]
     return messages
 
+# count number of tokens in message
 def num_tokens_from_messages(messages, model=model_engine):
   """Returns the number of tokens used by a list of messages."""
   try:

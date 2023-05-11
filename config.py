@@ -1,4 +1,5 @@
 transcripts_folder = "./transcripts"
+audio_prompts_folder="./audio_prompts"
 
 # Model Parameters
 model_engine = "gpt-3.5-turbo"
@@ -9,13 +10,13 @@ token_buffer=300
 max_token=4096
 
 # how frequently do you wish to issue instruction?
-instruction_frequency= 3 
+instruction_frequency= 1 
 
 # how much repetition is ok (on a scale of 1-100) ?
-repeat_factor = 40
+repeat_factor = 25
 
 # how much randomness do you wish in responses (on a scale of 1-100)?
-randomness = 25 
+randomness = 40
 
 #number of messages to keep if hit the token limit
 keep_messages=35
