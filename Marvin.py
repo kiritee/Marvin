@@ -26,7 +26,12 @@ while ((user_prompt.upper()) not in goodbye_prompts ):
         if prompt_count % instruction_frequency == 0: # re-issue instruction every now and then
             messages = remove_items(messages, system_instruction) # first remove all previouis occurence of system instruction to shorten message
             messages.append(system_instruction) # add new instruction
+       
         messages.append({"role": "user", "content": user_prompt}) # keep the whole conversation together
+
+        messages = trimmed(messages) # trim message if too many tokens
+
+        # generate response and write into transcript
         response_message = chat_response(messages)
         response_text = "\nMarvin: " + response_message['content']+'\n'
         print(response_text)
@@ -34,6 +39,8 @@ while ((user_prompt.upper()) not in goodbye_prompts ):
         with open(ts_filename, 'a') as ts:
             ts.write('\n\n' + response_text)
         prompt_count = (prompt_count + 1) 
+
+        # ask for next prompt
         user_prompt=input().strip()
         with open(ts_filename, 'a') as ts:
             ts.write('\n\n' + "Me: "+ user_prompt)
