@@ -1,5 +1,6 @@
 import pathlib
 from datetime import datetime
+from playsound import playsound
 from utils import *
 from config import *
 
@@ -14,16 +15,16 @@ messages =list()
 system_instruction={"role": "system", "content": instruction}
 
 #initial greeting
+clear()
 print(initial_greeting)
-input()
-user_prompt=speech_input()
+user_prompt=input().strip()
 
 # write to transcript
 with open(ts_filename, 'w+') as ts:
-      ts.write(initial_greeting +'\n\n' + "Me: "+ user_prompt)
+      ts.write(initial_greeting +'\n' + "Me: "+ user_prompt)
 
 # keep chatting till user sets goodbye prompt
-while ((user_prompt.rstrip('.').upper()) not in goodbye_prompts ):
+while ((user_prompt.upper()) not in goodbye_prompts ):
         if prompt_count % instruction_frequency == 0: # re-issue instruction every now and then
             messages = remove_items(messages, system_instruction) # first remove all previouis occurence of system instruction to shorten message
             messages.append(system_instruction) # add new instruction
@@ -32,22 +33,43 @@ while ((user_prompt.rstrip('.').upper()) not in goodbye_prompts ):
 
         messages = trimmed(messages) # trim message if too many tokens
 
-        # generate response and write into transcript
-        response_message = chat_response(messages)
-        response_text = "\nMarvin: " + response_message['content']+'\n'
-        print_response(response_text)
-        messages.append(response_message)
+        # stream response
+
+        response_text=""
+        type_freq=0;
+
+        response_stream = chat_response_stream(messages)
+        print("\nMarvin: ", end='')
+        sys.stdout.flush()
+        for chunk in response_stream:
+            if 'content' in chunk['choices'][0]['delta']:
+                next_token=chunk['choices'][0]['delta']['content']
+                print(next_token, end='') 
+
+                type_freq = type_freq +1 
+                if type_freq %2 ==0:
+                    playsound('media/kbd1_1.m4a',True)
+                sys.stdout.flush() 
+                time.sleep(0.2-typing_speed/500) 
+                response_text = response_text + next_token
+        print('\n')
+
+        # add response to transcript
         with open(ts_filename, 'a') as ts:
-            ts.write('\n\n' + response_text)
+            ts.write('\n\nMarvin:' + response_text)
         prompt_count = (prompt_count + 1) 
 
+        # add response to next message
+        messages.append({"role": "assistant", "content": "response_text"})
+
         # ask for next prompt
-        input()
-        user_prompt=speech_input()
+        user_prompt=input().strip()
+        while user_prompt=='': #ignore accidental 'enter's pressed by user
+            user_prompt=input().strip()
         with open(ts_filename, 'a') as ts:
             ts.write('\n\n' + "Me: "+ user_prompt)
 
 # say goodbye and exit
 print('\n'+goodbye_msg)
 with open(ts_filename, 'a') as ts:
-    ts.write('\n\n\n' + goodbye_msg)
+    ts.write('\n\n' + goodbye_msg)
