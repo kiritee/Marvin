@@ -9,8 +9,6 @@ import tiktoken
 import speech_recognition as sr
 import whisper
 
-openai.api_key = "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"
-
 # listen to speech input from microphone and record on to a wav file
 def listen_to_user() :
     r = sr.Recognizer()
@@ -26,13 +24,13 @@ def listen_to_user() :
         audio_file.write(audio.get_wav_data())
     return audio_filename
 
-
+# take speech input in any language
 def speech_input(lang):
     if lang == 'en':
         return speech_input_en()
     else: return speech_input_lang(lang)
 
-# function to get speech input
+# function to get speech input in English
 def speech_input_en():
     audio_filename = listen_to_user()
     with open(audio_filename,'rb') as audio_file:
@@ -40,6 +38,7 @@ def speech_input_en():
     print("You: " + transcript)
     return transcript
 
+# function to get speech input in non-English language
 def speech_input_lang(lang):
     audio_filename = listen_to_user()
     with open(audio_filename,'rb') as audio_file:
@@ -51,29 +50,7 @@ def speech_input_lang(lang):
     print("("+transcript+")")
     return transcript
 
-def speech_input_anylang():
-    model = whisper.load_model("base")
-    audio_filename = listen_to_user()
-    
-    # load audio and pad/trim it to fit 30 seconds
-    audio = whisper.load_audio(audio_filename)
-    audio = whisper.pad_or_trim(audio)
 
-    # make log-Mel spectrogram and move to the same device as the model
-    mel = whisper.log_mel_spectrogram(audio).to(model.device)
-
-    # detect the spoken language
-    _, probs = model.detect_language(mel)
-    print(f"Detected language: {max(probs, key=probs.get)}")
-
-    # decode the audio
-    options = whisper.DecodingOptions()
-    result = whisper.decode(model, mel, options)
-
-    # print the recognized text
-    print("You:" + result.text)
-
-    return result.text
 
 # print text on screen one character at a time
 def print_response(text):
@@ -133,7 +110,7 @@ def num_tokens_from_messages(messages, model=model_engine):
   else:
       raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}""")
   
-  # define our clear function
+# define our clear function
 def clear(): 
     # for windows
     if os.name == 'nt':
@@ -144,9 +121,3 @@ def clear():
         _ = os.system('clear')
 
 
-def num_tokens(filename):
-    with open(filename, 'r') as f:
-        text = f.read()
-    message = [{"role": "user", "content":text}]
-    print(type(message))
-    return num_tokens_from_messages(message, model=model_engine)
