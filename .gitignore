@@ -1,3 +1,4 @@
 transcripts/
 audio_prompts/
 test.py
+__pycache__
