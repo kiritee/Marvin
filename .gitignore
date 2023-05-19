@@ -1,6 +1,6 @@
 transcripts/
 audio_prompts/
-test.py
 __pycache__/
+test.py
 .gitignore
 .DS_Store
