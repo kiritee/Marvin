@@ -7,7 +7,6 @@ import sys
 import openai
 import tiktoken
 import speech_recognition as sr
-import whisper
 
 # listen to speech input from microphone and record on to a wav file
 def listen_to_user() :
@@ -120,4 +119,11 @@ def clear():
     else:
         _ = os.system('clear')
 
+# run listen in background and wait for wake phrase 
+def listen_in_background():
+    r = sr.Recognizer()
+    source = sr.Microphone()
+    r.listen_in_background(source, check_wakeup_phrase)
+    time.sleep(1000000)
 
+# check if the text listened to in backgroud contains wakeup phrase
